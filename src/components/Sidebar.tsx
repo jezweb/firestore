@@ -33,7 +33,7 @@ export function Sidebar({
   onAboutClick,
 }: SidebarProps) {
   return (
-    <div className="w-64 bg-white dark:bg-dark-800 border-r border-gray-200 dark:border-dark-700 fixed h-screen flex flex-col transition-colors">
+    <div className="w-64 bg-white dark:bg-dark-800 border-r border-gray-200 dark:border-dark-700 fixed h-screen flex flex-col transition-colors z-20">
       <div className="flex-1 overflow-y-auto p-4">
         <div className="mb-6">
           <a href="/" className="flex items-center gap-2 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">

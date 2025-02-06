@@ -21,11 +21,15 @@
 - 📁 **Collection Management**: Create, load, and manage Firestore collections with an intuitive interface.
 - 🔍 **Advanced Search & Filtering**: Full-text search and custom filters to find documents quickly.
 - ✏️ **Document Editing**: Powerful JSON editor with syntax highlighting and form-based editing.
+- 📊 **Table View**: View and edit documents in a table format with inline editing and column sorting.
 - 🔄 **Real-time Updates**: Changes are reflected immediately in your Firestore database.
 - 🎨 **Beautiful UI**: Clean, modern interface built with React and Tailwind CSS.
 - 🎯 **Field Management**: Reorder fields, apply field order to multiple documents, and maintain consistent document structure.
 - 📦 **Batch Operations**: Update, download, or delete multiple documents simultaneously.
-- 💾 **Export Options**: Download individual documents or entire collections as formatted JSON.
+- 💾 **Export Options**: 
+  - Download in JSON or CSV format
+  - Choose between combined or separate files
+  - Automatic timestamp-based filenames
 - 🔄 **Document Duplication**: Clone documents with automatic timestamp suffixes.
 
 ## 🚀 Getting Started

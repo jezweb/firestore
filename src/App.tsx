@@ -305,7 +305,7 @@ function App() {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-dark-900 transition-colors">
-      <div className="flex min-h-screen">
+      <div className="flex min-h-screen overflow-hidden">
         <Toaster position="top-right" />
         <ProfileModal
           show={showProfileModal}

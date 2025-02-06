@@ -57,14 +57,27 @@ Entry point that:
 ### Document Management
 
 #### `DocumentViewer.tsx`
-Main document management interface that coordinates:
+Main document management interface that provides:
 - Document listing
 - Document editing
 - Batch operations
 - Search and filtering
 - Field reordering
+- Table view with inline editing
+- Multiple download format options
 
 #### Document Components
+
+##### `TableView.tsx`
+- Displays documents in tabular format
+- Supports inline field editing
+- Column sorting functionality
+- Responsive table layout
+
+##### `ViewToggle.tsx`
+- Switches between document and table views
+- Maintains view state
+- Consistent styling with theme
 
 ##### `DocumentHeader.tsx`
 - Shows document actions (edit, delete, download)
@@ -106,7 +119,8 @@ Main document management interface that coordinates:
 #### `BatchUpdateForm.tsx`
 - Handles batch document operations:
   - Update multiple documents
-  - Download selected documents
+  - Download documents in JSON/CSV format
+  - Support for combined/separate file downloads
   - Delete multiple documents
 - Provides field-value input for updates
 
@@ -152,6 +166,12 @@ Main document management interface that coordinates:
 - Provides security information
 
 ## Key Features Implementation
+
+### Document Views
+- Document-centric view with JSON/Form editors
+- Table view with inline editing
+- View state persistence
+- Seamless switching between views
 
 ### Dark Mode
 - System preference detection via `ThemeContext`

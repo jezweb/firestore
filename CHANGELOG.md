@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.2.2] - 2025-02-06
+
+### Added
+- Table View
+  - Alternative view mode for documents
+  - Inline field editing with double-click
+  - Column sorting
+  - Responsive table layout
+- Enhanced Download Options
+  - Support for both JSON and CSV formats
+  - Option to download as combined or separate files
+  - Timestamp-based filenames for combined downloads
+
 ## [1.2.1] - 2025-02-06
 
 ### Changed

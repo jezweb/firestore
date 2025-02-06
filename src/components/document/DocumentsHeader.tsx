@@ -1,5 +1,6 @@
 import React from 'react';
-import { Plus, ListChecks, Download, Trash2 } from 'lucide-react';
+import { Plus, ListChecks } from 'lucide-react';
+import { ViewToggle } from './ViewToggle';
 
 interface DocumentsHeaderProps {
   documentsCount: number;
@@ -9,6 +10,8 @@ interface DocumentsHeaderProps {
   setShowBatchUpdate: (show: boolean) => void;
   onShowAddForm: (show: boolean) => void;
   showAddForm: boolean;
+  view: 'table' | 'document';
+  onViewChange: (view: 'table' | 'document') => void;
 }
 
 export function DocumentsHeader({
@@ -18,13 +21,15 @@ export function DocumentsHeader({
   showBatchUpdate,
   setShowBatchUpdate,
   onShowAddForm,
-  showAddForm
+  showAddForm,
+  view,
+  onViewChange
 }: DocumentsHeaderProps) {
   return (
     <div className="border-b border-gray-200 dark:border-dark-700 pb-4 mb-4">
       <div className="flex flex-col gap-4">
-        <div className="flex items-center gap-2">
-          <h2 className="text-lg font-medium text-gray-900 dark:text-white">Documents</h2>
+        <div className="flex items-center justify-between">
+          <ViewToggle view={view} onViewChange={onViewChange} />
           <div className="flex items-center gap-2">
             {selectedCount > 0 && (
               <span className="px-2 py-0.5 text-xs font-medium text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/50 rounded-full">

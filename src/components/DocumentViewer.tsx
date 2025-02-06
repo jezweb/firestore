@@ -2,6 +2,8 @@ import React from 'react';
 import { Plus, ListChecks, Code, FormInput, Download } from 'lucide-react';
 import { Collection, FilterConfig } from '../types';
 import toast from 'react-hot-toast';
+import { ViewToggle } from './document/ViewToggle';
+import { TableView } from './document/TableView';
 import { DocumentHeader } from './document/DocumentHeader';
 import { DocumentList } from './document/DocumentList';
 import { SearchAndFilters } from './document/SearchAndFilters';
@@ -43,6 +45,7 @@ export function DocumentViewer({
 }: DocumentViewerProps) {
   const documents = collections[0]?.documents || [];
   const collectionName = collections[0]?.name;
+  const [view, setView] = React.useState<'table' | 'document'>('document');
   const [editMode, setEditMode] = React.useState(false);
   const [editedJson, setEditedJson] = React.useState('');
   const [searchTerm, setSearchTerm] = React.useState('');
@@ -126,26 +129,95 @@ export function DocumentViewer({
     }
   };
 
-  const handleBatchDownload = () => {
-    selectedDocuments.forEach(docId => {
+  const handleBatchDownload = (format: 'json' | 'csv', combined: boolean) => {
+    const selectedDocs = selectedDocuments.map(docId => {
       const doc = documents.find(d => d.id === docId);
-      if (doc) {
-        const { id, ...data } = doc;
-        const sortedData = {
-          id,
-          ...Object.keys(data).sort().reduce((obj, key) => ({ ...obj, [key]: data[key] }), {})
-        };
-        const blob = new Blob([JSON.stringify(sortedData, null, 2)], { type: 'application/json' });
+      if (!doc) return null;
+      
+      const { id, ...data } = doc;
+      return {
+        id,
+        ...Object.keys(data).sort().reduce((obj, key) => ({ ...obj, [key]: data[key] }), {})
+      };
+    }).filter(Boolean);
+
+    if (combined) {
+      // Combined file download
+      let content: string;
+      let mimeType: string;
+      let extension: string;
+      const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+
+      if (format === 'json') {
+        content = JSON.stringify(selectedDocs, null, 2);
+        mimeType = 'application/json';
+        extension = 'json';
+      } else {
+        // Get all unique headers
+        const headers = Array.from(new Set(
+          selectedDocs.flatMap(doc => Object.keys(doc))
+        )).sort();
+        
+        // Create CSV content with all fields
+        const rows = selectedDocs.map(doc => 
+          headers.map(header => {
+            const value = doc[header];
+            return value === undefined ? '' : 
+              typeof value === 'object' ? JSON.stringify(value) : String(value);
+          })
+        );
+        
+        content = [
+          headers.join(','),
+          ...rows.map(row => row.join(','))
+        ].join('\n');
+        
+        mimeType = 'text/csv';
+        extension = 'csv';
+      }
+      
+      const blob = new Blob([content], { type: mimeType });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `documents_${timestamp}.${extension}`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } else {
+      // Individual file downloads
+      selectedDocs.forEach(doc => {
+        let content: string;
+        let mimeType: string;
+        let extension: string;
+
+        if (format === 'json') {
+          content = JSON.stringify(doc, null, 2);
+          mimeType = 'application/json';
+          extension = 'json';
+        } else {
+          const headers = Object.keys(doc);
+          const values = headers.map(header => {
+            const value = doc[header];
+            return typeof value === 'object' ? JSON.stringify(value) : String(value);
+          });
+          content = headers.join(',') + '\n' + values.join(',');
+          mimeType = 'text/csv';
+          extension = 'csv';
+        }
+
+        const blob = new Blob([content], { type: mimeType });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `${id}.json`;
+        a.download = `${doc.id}.${extension}`;
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
-      }
-    });
+      });
+    }
   };
 
   const handleBatchDelete = async () => {
@@ -259,96 +331,129 @@ export function DocumentViewer({
   };
 
   return (
-    <div className="flex h-[calc(100vh-8rem)] bg-white dark:bg-dark-800 rounded-lg shadow">
-      <div className="w-1/3 border-r border-gray-200 dark:border-dark-700 p-6 overflow-y-auto rounded-l-lg">
-        <DocumentsHeader
-          documentsCount={documents.length}
-          selectedCount={selectedDocuments.length}
-          filtersCount={filters.length}
-          showBatchUpdate={showBatchUpdate}
-          setShowBatchUpdate={setShowBatchUpdate}
-          onShowAddForm={onShowAddForm}
-          showAddForm={showAddForm}
-        />
-        
-        {showBatchUpdate && (
-          <BatchUpdateForm
-            batchUpdateField={batchUpdateField}
-            setBatchUpdateField={setBatchUpdateField}
-            batchUpdateValue={batchUpdateValue}
-            setBatchUpdateValue={setBatchUpdateValue}
-            selectedDocuments={selectedDocuments}
-            handleBatchUpdate={handleBatchUpdate}
-            onBatchDownload={handleBatchDownload}
-            onBatchDelete={handleBatchDelete}
-          />
-        )}
+    <div className="flex h-[calc(100vh-8rem)] bg-white dark:bg-dark-800 rounded-lg shadow overflow-hidden">
+      {view === 'document' ? (
+        <div className="flex w-full">
+          <div className="w-1/3 border-r border-gray-200 dark:border-dark-700 p-6 overflow-y-auto rounded-l-lg">
+            <DocumentsHeader
+              documentsCount={documents.length}
+              selectedCount={selectedDocuments.length}
+              filtersCount={filters.length}
+              showBatchUpdate={showBatchUpdate}
+              setShowBatchUpdate={setShowBatchUpdate}
+              onShowAddForm={onShowAddForm}
+              showAddForm={showAddForm}
+              view={view}
+              onViewChange={setView}
+            />
+            
+            {showBatchUpdate && (
+              <BatchUpdateForm
+                batchUpdateField={batchUpdateField}
+                setBatchUpdateField={setBatchUpdateField}
+                batchUpdateValue={batchUpdateValue}
+                setBatchUpdateValue={setBatchUpdateValue}
+                selectedDocuments={selectedDocuments}
+                handleBatchUpdate={handleBatchUpdate}
+                onBatchDownload={handleBatchDownload}
+                onBatchDelete={handleBatchDelete}
+              />
+            )}
 
-        <SearchAndFilters
-          searchTerm={searchTerm}
-          setSearchTerm={setSearchTerm}
-          showFilters={showFilters}
-          setShowFilters={setShowFilters}
-          filters={filters}
-          setFilters={setFilters}
-          sortOrder={sortOrder}
-          setSortOrder={setSortOrder}
-          sortField={sortField}
-          setSortField={setSortField}
-        />
-        
-        {showAddForm && (
-          <AddDocumentForm
-            newDocumentId={newDocumentId}
-            onNewDocumentIdChange={onNewDocumentIdChange}
-            newDocumentJson={newDocumentJson}
-            onNewDocumentJsonChange={onNewDocumentJsonChange}
-            onAddDocument={onAddDocument}
-          />
-        )}
+            <SearchAndFilters
+              searchTerm={searchTerm}
+              setSearchTerm={setSearchTerm}
+              showFilters={showFilters}
+              setShowFilters={setShowFilters}
+              filters={filters}
+              setFilters={setFilters}
+              sortOrder={sortOrder}
+              setSortOrder={setSortOrder}
+              sortField={sortField}
+              setSortField={setSortField}
+            />
+            
+            {showAddForm && (
+              <AddDocumentForm
+                newDocumentId={newDocumentId}
+                onNewDocumentIdChange={onNewDocumentIdChange}
+                newDocumentJson={newDocumentJson}
+                onNewDocumentJsonChange={onNewDocumentJsonChange}
+                onAddDocument={onAddDocument}
+              />
+            )}
 
-        <DocumentList
-          filteredDocuments={filteredDocuments}
-          selectedDocument={selectedDocument}
-          showBatchUpdate={showBatchUpdate}
-          selectedDocuments={selectedDocuments}
-          toggleDocumentSelection={toggleDocumentSelection}
-          toggleAllDocuments={toggleAllDocuments}
-          onDocumentSelect={onDocumentSelect}
-          onDeleteDocument={onDeleteDocument}
-          collectionName={collectionName}
-        />
-      </div>
-
-      <div className="flex-1 p-6 overflow-y-auto rounded-r-lg">
-        {selectedDocument && (
-          <>
-            <DocumentHeader
+            <DocumentList
+              filteredDocuments={filteredDocuments}
               selectedDocument={selectedDocument}
-              editMode={editMode}
-              editorMode={editorMode}
-              setEditorMode={setEditorMode}
-              handleEditClick={handleEditClick}
-              handleSaveClick={handleSaveClick}
-              setEditMode={setEditMode}
-              handleDuplicate={handleDuplicate}
+              showBatchUpdate={showBatchUpdate}
+              selectedDocuments={selectedDocuments}
+              toggleDocumentSelection={toggleDocumentSelection}
+              toggleAllDocuments={toggleAllDocuments}
+              onDocumentSelect={onDocumentSelect}
               onDeleteDocument={onDeleteDocument}
               collectionName={collectionName}
             />
-            <ViewerContent
-              selectedDocument={selectedDocument}
-              editMode={editMode}
-              editorMode={editorMode}
-              editedJson={editedJson}
-              setEditedJson={setEditedJson}
-              formFields={formFields}
-              handleFormFieldChange={handleFormFieldChange}
-              removeFormField={removeFormField}
-              addFormField={addFormField}
-            />
-          </>
-        )}
-      </div>
+          </div>
+
+          <div className="flex-1 p-6 overflow-y-auto rounded-r-lg">
+            {selectedDocument && (
+              <>
+                <DocumentHeader
+                  selectedDocument={selectedDocument}
+                  editMode={editMode}
+                  editorMode={editorMode}
+                  setEditorMode={setEditorMode}
+                  handleEditClick={handleEditClick}
+                  handleSaveClick={handleSaveClick}
+                  setEditMode={setEditMode}
+                  handleDuplicate={handleDuplicate}
+                  onDeleteDocument={onDeleteDocument}
+                  collectionName={collectionName}
+                />
+                <ViewerContent
+                  selectedDocument={selectedDocument}
+                  editMode={editMode}
+                  editorMode={editorMode}
+                  editedJson={editedJson}
+                  setEditedJson={setEditedJson}
+                  formFields={formFields}
+                  handleFormFieldChange={handleFormFieldChange}
+                  removeFormField={removeFormField}
+                  addFormField={addFormField}
+                />
+              </>
+            )}
+          </div>
+        </div>
+      ) : (
+        <div className="w-full flex flex-col bg-white dark:bg-dark-800 overflow-hidden">
+          <div className="p-6 pb-4 border-b border-gray-200 dark:border-dark-700 flex justify-between items-center">
+            <ViewToggle view={view} onViewChange={setView} />
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-gray-500 dark:text-gray-400">
+                {documents.length} document{documents.length !== 1 ? 's' : ''}
+              </span>
+            </div>
+          </div>
+          <TableView
+            documents={filteredDocuments}
+            onDeleteDocument={onDeleteDocument}
+            onUpdateDocument={onUpdateDocument}
+            collectionName={collectionName}
+            sortField={sortField}
+            sortOrder={sortOrder}
+            onSort={(field) => {
+              if (sortField === field) {
+                setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+              } else {
+                setSortField(field);
+                setSortOrder('asc');
+              }
+            }}
+          />
+        </div>
+      )}
     </div>
   );
 }

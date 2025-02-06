@@ -24,7 +24,7 @@ export function About() {
             <FeatureCard
               icon={<FileJson className="w-6 h-6 text-indigo-600 dark:text-indigo-400" />}
               title="Collection Management"
-              description="Create, load, and manage Firestore collections with an intuitive interface. Download collections, perform batch updates, and maintain consistent document structure."
+              description="Create, load, and manage Firestore collections with an intuitive interface. View documents in table or document format, perform batch updates, and maintain consistent document structure."
             />
             <FeatureCard
               icon={<Search className="w-6 h-6 text-indigo-600 dark:text-indigo-400" />}
@@ -39,7 +39,7 @@ export function About() {
             <FeatureCard
               icon={<ListChecks className="w-6 h-6 text-indigo-600 dark:text-indigo-400" />}
               title="Batch Operations"
-              description="Efficiently manage multiple documents with batch update, download, and delete operations. Perfect for bulk modifications and data exports."
+              description="Efficiently manage multiple documents with batch operations. Download in JSON or CSV format, update multiple documents at once, and perform bulk deletions."
             />
             <FeatureCard
               icon={<Moon className="w-6 h-6 text-indigo-600 dark:text-indigo-400" />}
@@ -97,10 +97,17 @@ export function About() {
               </div>
               <div>
                 <h3 className="text-lg font-semibold mb-2">Work with Documents</h3>
-                <p className="text-gray-600 dark:text-gray-300 leading-relaxed">
-                  View, edit, and manage documents with our powerful interface. Use the JSON editor with syntax highlighting,
-                  switch to the form view for structured editing, perform batch operations, and export data as needed.
-                </p>
+                <div className="text-gray-600 dark:text-gray-300 leading-relaxed space-y-2">
+                  <span className="block">
+                    View and edit documents in multiple ways:
+                  </span>
+                  <ul className="list-disc pl-6 space-y-1">
+                    <li>Document view with JSON editor and form interface</li>
+                    <li>Table view with inline editing and column sorting</li>
+                    <li>Download data in JSON or CSV format</li>
+                    <li>Choose between combined or separate file downloads</li>
+                  </ul>
+                </div>
               </div>
             </div>
           </div>
