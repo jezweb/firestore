@@ -17,3 +17,8 @@ export interface Collection {
   name: string;
   documents: any[];
 }
+
+export interface FilterConfig {
+  field: string;
+  value: string;
+}

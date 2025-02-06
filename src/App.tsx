@@ -4,6 +4,8 @@ import { initializeApp } from 'firebase/app';
 import { 
   getFirestore, 
   collection, 
+  getDoc,
+  writeBatch,
   setDoc,
   updateDoc,
   getDocs, 
@@ -42,6 +44,23 @@ function App() {
   const [showAbout, setShowAbout] = useState(false);
   const [newDocumentIdForExisting, setNewDocumentIdForExisting] = useState('');
 
+  // Memoize profile loading logic
+  const loadProfileData = React.useCallback((profile: Profile) => {
+    setConfig(profile.config);
+    setActiveProfile(profile.name);
+    setLoadedCollections(profile.collections);
+    handleConfigSubmit(new Event('submit') as any, profile.config);
+  }, []);
+
+  // Memoize collection loading logic
+  const loadCollectionData = React.useCallback(async (colName: string) => {
+    const collections = await getDocs(collection(db, colName));
+    return collections.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    }));
+  }, [db]);
+
   useEffect(() => {
     const savedProfiles = localStorage.getItem('firebaseProfiles');
     if (savedProfiles) {
@@ -55,11 +74,7 @@ function App() {
 
   const handleCollectionSelect = async (colName: string) => {
     setSelectedCollection(colName);
-    const collections = await getDocs(collection(db, colName));
-    const docs = collections.docs.map(doc => ({
-      id: doc.id, 
-      ...doc.data()
-    }));
+    const docs = await loadCollectionData(colName);
     setCollections([{ name: colName, documents: docs }]);
     if (!loadedCollections.includes(colName)) {
       setLoadedCollections(prev => [...prev, colName]);
@@ -85,12 +100,9 @@ function App() {
     toast.success('Profile saved successfully!');
   };
 
-  const loadProfile = (profile: Profile) => {
-    setConfig(profile.config);
-    setActiveProfile(profile.name);
-    setLoadedCollections(profile.collections);
-    handleConfigSubmit(new Event('submit') as any, profile.config);
-  };
+  const loadProfile = React.useCallback((profile: Profile) => {
+    loadProfileData(profile);
+  }, [loadProfileData]);
 
   const deleteProfile = (name: string) => {
     const updatedProfiles = profiles.filter(p => p.name !== name);
@@ -247,7 +259,17 @@ function App() {
   const updateDocument = async (collectionName: string, documentId: string, newData: any) => {
     try {
       const docRef = doc(db, collectionName, documentId);
-      await updateDoc(docRef, newData);
+      // Get current document data
+      const docSnap = await getDoc(docRef);
+      if (docSnap.exists()) {
+        const currentData = docSnap.data();
+        // Merge current data with new data while preserving field order
+        const mergedData = { ...currentData, ...newData };
+        // Use setDoc with merge option to update the document
+        await setDoc(docRef, mergedData, { merge: true });
+      } else {
+        await setDoc(docRef, newData);
+      }
       toast.success('Document updated successfully!');
       await loadCollections();
     } catch (error) {
@@ -256,8 +278,33 @@ function App() {
     }
   };
 
+  const batchUpdateDocuments = async (collectionName: string, updates: Record<string, any>, selectedDocs: string[]) => {
+    try {
+      const batch = writeBatch(db);
+      const docs = await Promise.all(
+        selectedDocs.map(async (docId) => {
+          const docRef = doc(db, collectionName, docId);
+          const docSnap = await getDoc(docRef);
+          return { ref: docRef, data: docSnap.data() };
+        })
+      );
+      
+      docs.forEach(({ ref, data }) => {
+        const mergedData = { ...data, ...updates };
+        batch.set(ref, mergedData, { merge: true });
+      });
+      
+      await batch.commit();
+      toast.success('Documents updated successfully!');
+      await loadCollections();
+    } catch (error) {
+      toast.error('Failed to update documents');
+      console.error(error);
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-dark-900 transition-colors">
       <div className="flex min-h-screen">
         <Toaster position="top-right" />
         <ProfileModal
@@ -287,7 +334,7 @@ function App() {
           onAboutClick={() => setShowAbout(true)}
           activeProfileCollections={loadedCollections}
         />
-        <main className="flex-1 p-8 ml-64">
+        <main className="flex-1 p-8 ml-64 dark:text-gray-100">
           {showAbout ? (
             <About />
           ) : !db ? (
@@ -335,6 +382,7 @@ function App() {
                   onDocumentSelect={setSelectedDocument}
                   onDeleteDocument={deleteDocument}
                   onUpdateDocument={updateDocument}
+                  onBatchUpdate={batchUpdateDocuments}
                 />
               )}
             </div>

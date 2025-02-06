@@ -8,6 +8,7 @@ interface LoadCollectionFormProps extends BaseCollectionFormProps {
   selectedCollection: string | null;
   onCollectionChange: (name: string) => void;
   onLoadCollections: () => Promise<void>;
+  loading?: boolean;
 }
 
 interface CreateCollectionFormProps extends BaseCollectionFormProps {
@@ -26,16 +27,25 @@ export function CollectionForm(props: CollectionFormProps) {
   if ('selectedCollection' in props) {
     // Load Collection Form
     const { selectedCollection, onCollectionChange, onLoadCollections, loading } = props;
+
+    const handleKeyPress = (e: React.KeyboardEvent) => {
+      if (e.key === 'Enter' && selectedCollection?.trim()) {
+        e.preventDefault();
+        onLoadCollections();
+      }
+    };
+
     return (
-      <div className="bg-white rounded-lg shadow p-6">
-        <h2 className="text-xl font-semibold mb-4">Load Collection</h2>
+      <div className="bg-white dark:bg-dark-800 rounded-lg shadow p-6">
+        <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">Load Collection</h2>
         <div className="mb-6">
           <div className="flex gap-4">
             <input
               type="text"
               value={selectedCollection || ''}
               onChange={(e) => onCollectionChange(e.target.value)}
-              className="flex-1 px-3 py-2 border border-gray-300 rounded-md"
+              onKeyPress={handleKeyPress}
+              className="flex-1 px-3 py-2 border border-gray-300 dark:border-dark-600 rounded-md bg-white dark:bg-dark-900 text-gray-900 dark:text-white"
               placeholder="Enter collection name to load..."
             />
             <button
@@ -46,7 +56,7 @@ export function CollectionForm(props: CollectionFormProps) {
               {loading ? 'Loading...' : 'Load Collection'}
             </button>
           </div>
-          <p className="mt-2 text-sm text-gray-500">
+          <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
             Enter the name of an existing collection to load its documents
           </p>
         </div>
@@ -66,44 +76,44 @@ export function CollectionForm(props: CollectionFormProps) {
   } = props;
 
   return (
-    <div className="bg-white rounded-lg shadow p-6">
-      <h2 className="text-xl font-semibold mb-4">Create New Collection</h2>
-      <p className="text-sm text-gray-500 mb-6">
+    <div className="bg-white dark:bg-dark-800 rounded-lg shadow p-6">
+      <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">Create New Collection</h2>
+      <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
         Create a new collection with an initial document, or use the "Load Collection" button in the sidebar to connect to an existing collection.
       </p>
       <form onSubmit={onSubmit} className="space-y-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Collection Name
           </label>
           <input
             type="text"
             value={newCollectionName}
             onChange={(e) => onCollectionNameChange(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md"
+            className="w-full px-3 py-2 border border-gray-300 dark:border-dark-600 rounded-md bg-white dark:bg-dark-900 text-gray-900 dark:text-white"
             placeholder="Enter collection name"
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Document ID (optional)
           </label>
           <input
             type="text"
             value={newDocumentId}
             onChange={(e) => onDocumentIdChange(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md"
+            className="w-full px-3 py-2 border border-gray-300 dark:border-dark-600 rounded-md bg-white dark:bg-dark-900 text-gray-900 dark:text-white"
             placeholder="Leave empty for auto-generated ID"
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             First Document (JSON)
           </label>
           <textarea
             value={newDocumentJson}
             onChange={(e) => onDocumentJsonChange(e.target.value)}
-            className="w-full h-48 px-3 py-2 border border-gray-300 rounded-md font-mono"
+            className="w-full h-48 px-3 py-2 border border-gray-300 dark:border-dark-600 rounded-md font-mono bg-white dark:bg-dark-900 text-gray-900 dark:text-white"
             placeholder="Paste JSON for the first document..."
           />
         </div>

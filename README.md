@@ -17,11 +17,16 @@
 ## ✨ Features
 
 - 🔐 **Profile Management**: Save and manage multiple Firestore configurations. Switch between different projects seamlessly.
+- 🌙 **Dark Mode**: Full dark mode support with system preference detection and manual toggle.
 - 📁 **Collection Management**: Create, load, and manage Firestore collections with an intuitive interface.
 - 🔍 **Advanced Search & Filtering**: Full-text search and custom filters to find documents quickly.
 - ✏️ **Document Editing**: Powerful JSON editor with syntax highlighting and form-based editing.
 - 🔄 **Real-time Updates**: Changes are reflected immediately in your Firestore database.
 - 🎨 **Beautiful UI**: Clean, modern interface built with React and Tailwind CSS.
+- 🎯 **Field Management**: Reorder fields, apply field order to multiple documents, and maintain consistent document structure.
+- 📦 **Batch Operations**: Update, download, or delete multiple documents simultaneously.
+- 💾 **Export Options**: Download individual documents or entire collections as formatted JSON.
+- 🔄 **Document Duplication**: Clone documents with automatic timestamp suffixes.
 
 ## 🚀 Getting Started
 
@@ -73,6 +78,7 @@ npm run build
    - View, edit, and delete documents
    - Use the JSON editor or form view for editing
    - Advanced search and filtering capabilities
+   - Batch update, download, or delete multiple documents
 
 ## 🔒 Security
 
@@ -112,7 +118,7 @@ If you find this project useful, please consider giving it a star on GitHub! ⭐
 
 Jezweb - [https://www.jezweb.com.au](https://www.jezweb.com.au)
 
-Project Link: [https://github.com/jezweb/firestore-admin](https://github.com/jezweb/firestore)
+Project Link: [https://github.com/jezweb/firestore](https://github.com/jezweb/firestore)
 
 ---
 
