@@ -46,7 +46,6 @@ export function JsonEditor({
         automaticLayout: true,
         formatOnPaste: true,
         formatOnType: true,
-        formatOnType: true,
         theme: document.documentElement.classList.contains('dark') ? 'vs-dark' : 'vs-light'
       }}
     />
