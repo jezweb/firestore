@@ -1,17 +1,17 @@
 import React from 'react';
 import { useState, useEffect } from 'react';
-import { initializeApp } from 'firebase/app';
-import { 
-  getFirestore, 
-  collection, 
+import { initializeApp, getApps, deleteApp } from 'firebase/app';
+import {
+  getFirestore,
+  collection,
   getDoc,
   writeBatch,
   setDoc,
-  updateDoc,
-  getDocs, 
-  addDoc, 
-  deleteDoc, 
-  doc 
+  getDocs,
+  addDoc,
+  deleteDoc,
+  doc,
+  Firestore
 } from 'firebase/firestore';
 import toast, { Toaster } from 'react-hot-toast';
 import { FirebaseConfig, Profile, Collection } from './types';
@@ -26,7 +26,7 @@ function App() {
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [activeProfile, setActiveProfile] = useState<string | null>(null);
   const [config, setConfig] = useState<FirebaseConfig | null>({} as FirebaseConfig);
-  const [db, setDb] = useState<any>(null);
+  const [db, setDb] = useState<Firestore | null>(null);
   const [newCollectionName, setNewCollectionName] = useState('');
   const [newDocumentJson, setNewDocumentJson] = useState('');
   const [loading, setLoading] = useState(false);
@@ -36,7 +36,7 @@ function App() {
   const [profileName, setProfileName] = useState('');
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [collections, setCollections] = useState<Collection[]>([]);
-  const [selectedDocument, setSelectedDocument] = useState<any>(null);
+  const [selectedDocument, setSelectedDocument] = useState<Record<string, unknown> | null>(null);
   const [loadedCollections, setLoadedCollections] = useState<string[]>([]);
   const [showAddDocumentForm, setShowAddDocumentForm] = useState(false);
   const [newDocumentJsonForExisting, setNewDocumentJsonForExisting] = useState('');
@@ -44,21 +44,53 @@ function App() {
   const [showAbout, setShowAbout] = useState(false);
   const [newDocumentIdForExisting, setNewDocumentIdForExisting] = useState('');
 
+  // Handle Firebase configuration submission
+  const handleConfigSubmit = React.useCallback(async (e: React.FormEvent, configOverride?: FirebaseConfig) => {
+    e.preventDefault();
+    try {
+      const configToUse = configOverride || config;
+
+      // Clean up any existing Firebase app to avoid re-initialization errors
+      const existingApps = getApps();
+      if (existingApps.length > 0) {
+        await Promise.all(existingApps.map(app => deleteApp(app)));
+      }
+
+      const app = initializeApp(configToUse!);
+      const firestore = getFirestore(app);
+      setDb(firestore);
+      setCollections([]); // Reset collections when connecting
+      toast.success('Firebase connected successfully!');
+    } catch (error) {
+      toast.error('Failed to connect to Firebase');
+      console.error(error);
+    }
+  }, [config]);
+
   // Memoize profile loading logic
   const loadProfileData = React.useCallback((profile: Profile) => {
     setConfig(profile.config);
     setActiveProfile(profile.name);
     setLoadedCollections(profile.collections);
-    handleConfigSubmit(new Event('submit') as any, profile.config);
-  }, []);
+    handleConfigSubmit(new Event('submit') as React.FormEvent, profile.config);
+  }, [handleConfigSubmit]);
 
   // Memoize collection loading logic
   const loadCollectionData = React.useCallback(async (colName: string) => {
-    const collections = await getDocs(collection(db, colName));
-    return collections.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data()
-    }));
+    if (!db) {
+      throw new Error('Database not connected');
+    }
+    try {
+      const collectionsSnapshot = await getDocs(collection(db, colName));
+      return collectionsSnapshot.docs.map(docSnapshot => ({
+        id: docSnapshot.id,
+        ...docSnapshot.data()
+      }));
+    } catch (error) {
+      console.error(`Failed to load collection "${colName}":`, error);
+      toast.error(`Failed to load collection "${colName}"`);
+      throw error;
+    }
   }, [db]);
 
   useEffect(() => {
@@ -116,21 +148,6 @@ function App() {
       setLoadedCollections([]);
     }
     toast.success('Profile deleted successfully!');
-  };
-
-  const handleConfigSubmit = async (e: React.FormEvent, configOverride?: FirebaseConfig) => {
-    e.preventDefault();
-    try {
-      const configToUse = configOverride || config;
-      const app = initializeApp(configToUse!);
-      const firestore = getFirestore(app);
-      setDb(firestore);
-      setCollections([]); // Reset collections when connecting
-      toast.success('Firebase connected successfully!');
-    } catch (error) {
-      toast.error('Failed to connect to Firebase');
-      console.error(error);
-    }
   };
 
   const loadCollections = async () => {

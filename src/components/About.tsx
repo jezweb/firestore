@@ -1,5 +1,5 @@
 import React from 'react';
-import { Database, Save, FileJson, Settings, Search, Filter, Edit2, Download, Moon, ListChecks } from 'lucide-react';
+import { Database, FileJson, Settings, Search, Edit2, Moon, ListChecks } from 'lucide-react';
 
 export function About() {
   return (

@@ -75,7 +75,12 @@ export function DocumentList({
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
-                    onDeleteDocument(collectionName, doc.id);
+                    const confirmDelete = window.confirm(
+                      'Are you sure you want to delete this document? This action cannot be undone.'
+                    );
+                    if (confirmDelete) {
+                      onDeleteDocument(collectionName, doc.id);
+                    }
                   }}
                   className="text-gray-400 dark:text-gray-500 hover:text-red-600 dark:hover:text-red-400 p-0.5 rounded-md opacity-0 group-hover:opacity-100 flex-shrink-0"
                 >

@@ -29,6 +29,9 @@ export function JsonEditor({
     }
   };
 
+  const isDarkMode = document.documentElement.classList.contains('dark');
+  const editorTheme = isDarkMode ? 'vs-dark' : 'vs-light';
+
   return (
     <Editor
       key={editMode ? 'edit' : 'view'}
@@ -36,7 +39,7 @@ export function JsonEditor({
       defaultLanguage="json"
       value={formatJson(editedJson)}
       onChange={(value) => setEditedJson(value || '')}
-      theme={document.documentElement.classList.contains('dark') ? 'vs-dark' : 'vs-light'}
+      theme={editorTheme}
       options={{
         readOnly: false,
         minimap: { enabled: false },
@@ -45,8 +48,7 @@ export function JsonEditor({
         scrollBeyondLastLine: false,
         automaticLayout: true,
         formatOnPaste: true,
-        formatOnType: true,
-        theme: document.documentElement.classList.contains('dark') ? 'vs-dark' : 'vs-light'
+        formatOnType: true
       }}
     />
   );
