@@ -83,7 +83,14 @@ export function DocumentHeader({
               <span className="whitespace-nowrap">Edit</span>
             </button>
             <button
-              onClick={() => onDeleteDocument(collectionName, selectedDocument.id)}
+              onClick={() => {
+                const confirmDelete = window.confirm(
+                  'Are you sure you want to delete this document? This action cannot be undone.'
+                );
+                if (confirmDelete) {
+                  onDeleteDocument(collectionName, selectedDocument.id);
+                }
+              }}
               className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/50 hover:bg-red-100 dark:hover:bg-red-900/75 rounded-md transition-colors"
               title="Delete document"
             >

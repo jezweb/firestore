@@ -91,6 +91,15 @@ function TableView({
       setEditValue('');
     }
   };
+
+  const handleDeleteClick = (docId: string) => {
+    const confirmDelete = window.confirm(
+      'Are you sure you want to delete this document? This action cannot be undone.'
+    );
+    if (confirmDelete) {
+      onDeleteDocument(collectionName, docId);
+    }
+  };
   return (
     <div className="relative flex-1 bg-white dark:bg-dark-800">
       <div className="absolute inset-0 overflow-auto">
@@ -156,7 +165,7 @@ function TableView({
               <td className="px-4 py-3">
                 <div className="flex items-center gap-2">
                   <button
-                    onClick={() => onDeleteDocument(collectionName, doc.id)}
+                    onClick={() => handleDeleteClick(doc.id)}
                     className="p-1 text-gray-400 hover:text-red-600 dark:hover:text-red-400 rounded-md"
                     title="Delete document"
                   >

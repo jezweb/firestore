@@ -1,5 +1,4 @@
 import React from 'react';
-import { Plus, ListChecks, Code, FormInput, Download } from 'lucide-react';
 import { Collection, FilterConfig } from '../types';
 import toast from 'react-hot-toast';
 import { ViewToggle } from './document/ViewToggle';
@@ -62,7 +61,7 @@ export function DocumentViewer({
 
   // Memoize document sorting and filtering logic
   const filteredDocuments = React.useMemo(() => {
-    let filtered = documents.filter(doc => {
+    const filtered = documents.filter(doc => {
       const docString = JSON.stringify(doc).toLowerCase();
       const matchesSearch = searchTerm ? docString.includes(searchTerm.toLowerCase()) : true;
       
@@ -129,11 +128,24 @@ export function DocumentViewer({
     }
   };
 
+  // Escape CSV value to handle special characters and prevent CSV injection
+  const escapeCSVValue = (value: string): string => {
+    // Prevent CSV injection by prefixing dangerous characters
+    if (/^[=+\-@\t\r]/.test(value)) {
+      value = `'${value}`;
+    }
+    // Escape quotes and wrap in quotes if contains special characters
+    if (value.includes(',') || value.includes('"') || value.includes('\n') || value.includes('\r')) {
+      return `"${value.replace(/"/g, '""')}"`;
+    }
+    return value;
+  };
+
   const handleBatchDownload = (format: 'json' | 'csv', combined: boolean) => {
     const selectedDocs = selectedDocuments.map(docId => {
       const doc = documents.find(d => d.id === docId);
       if (!doc) return null;
-      
+
       const { id, ...data } = doc;
       return {
         id,
@@ -158,17 +170,18 @@ export function DocumentViewer({
           selectedDocs.flatMap(doc => Object.keys(doc))
         )).sort();
         
-        // Create CSV content with all fields
-        const rows = selectedDocs.map(doc => 
+        // Create CSV content with all fields, properly escaped
+        const rows = selectedDocs.map(doc =>
           headers.map(header => {
             const value = doc[header];
-            return value === undefined ? '' : 
-              typeof value === 'object' ? JSON.stringify(value) : String(value);
+            if (value === undefined) return '';
+            const strValue = typeof value === 'object' ? JSON.stringify(value) : String(value);
+            return escapeCSVValue(strValue);
           })
         );
-        
+
         content = [
-          headers.join(','),
+          headers.map(h => escapeCSVValue(h)).join(','),
           ...rows.map(row => row.join(','))
         ].join('\n');
         
@@ -200,9 +213,10 @@ export function DocumentViewer({
           const headers = Object.keys(doc);
           const values = headers.map(header => {
             const value = doc[header];
-            return typeof value === 'object' ? JSON.stringify(value) : String(value);
+            const strValue = typeof value === 'object' ? JSON.stringify(value) : String(value);
+            return escapeCSVValue(strValue);
           });
-          content = headers.join(',') + '\n' + values.join(',');
+          content = headers.map(h => escapeCSVValue(h)).join(',') + '\n' + values.join(',');
           mimeType = 'text/csv';
           extension = 'csv';
         }
@@ -308,8 +322,8 @@ export function DocumentViewer({
           return acc;
         }, {} as Record<string, any>);
       }
-      const { id, ...dataWithoutId } = newData;
-      await onUpdateDocument(collectionName, selectedDocument.id, dataWithoutId);
+      const { id: _id, ...dataWithoutId } = newData;
+      await onUpdateDocument(collectionName, selectedDocument!.id as string, dataWithoutId);
       setEditMode(false);
     } catch (error) {
       toast.error(editorMode === 'json' ? 'Invalid JSON format' : 'Invalid field value format');
